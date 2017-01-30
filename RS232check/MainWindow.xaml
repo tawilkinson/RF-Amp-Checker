@@ -1,0 +1,18 @@
+﻿<Window x:Class="RS232check.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:RS232check"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="350" Width="525">
+    <Grid>
+        <Grid Margin="0,0,0,20">
+            <Button x:Name="btnPorts" Content="Ports" HorizontalAlignment="Left" Height="25" Margin="32,43,0,0" VerticalAlignment="Top" Width="62" Click="btnGetSerialPorts_Click"/>
+            <TextBox x:Name="txtbInfo" HorizontalAlignment="Left" Height="72" Margin="32,90,0,0" TextWrapping="Wrap" Text="Click Ports to load..." VerticalAlignment="Top" Width="195"/>
+            <ComboBox x:Name="cboPorts" HorizontalAlignment="Left" Height="25" Margin="115,43,0,0" VerticalAlignment="Top" Width="160"/>
+            <Button x:Name="btnPortState" Content="Port Status" HorizontalAlignment="Left" Height="24" Margin="294,44,0,0" VerticalAlignment="Top" Width="62"/>
+        </Grid>
+
+    </Grid>
+</Window>
