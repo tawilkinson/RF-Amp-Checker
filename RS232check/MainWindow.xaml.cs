@@ -16,6 +16,7 @@ namespace RS232check
         bool PortFlag = new bool();
         Dictionary<string, string> Commands = new Dictionary<string, string>();
         public Message messenger = new Message();
+        string currentPort;
 
         public MainWindow()
         {
@@ -69,6 +70,7 @@ namespace RS232check
             string[] ArrayComPortsNames = null;
             int index = -1;
             string ComPortName = null;
+            cboPorts.Items.Clear();
 
             try
             {
@@ -112,12 +114,14 @@ namespace RS232check
                 ComPort.Handshake = (Handshake)Enum.Parse(typeof(Handshake), "None");
                 ComPort.DataReceived += new SerialDataReceivedEventHandler(DataRecievedHandler);
                 ComPort.Open();
+                currentPort = cboPorts.Text;
                 SetMessage(cboPorts.Text + " opened.");
             }
             else if (btnPortState.Content.ToString() == "Open")
             {
                 btnPortState.Content = "Closed";
                 ComPort.Close();
+                currentPort = "No Port";
                 SetMessage(cboPorts.Text + " closed.");
             }
         }
@@ -129,22 +133,20 @@ namespace RS232check
 
             indata = Regex.Replace(indata, @"[^\u0020-\u007E]+", string.Empty);
 
-            if (indata == "11;")
+            switch (indata)
             {
-                SetMessage("Data Received:\n11;\nRF Enabled.");
-                
-            }
-            else if (indata == "9;")
-            {
-                SetMessage("Data Received:\n9;\nRF disabled.");
-            }
-            else if (indata == ";")
-            {
-                SetMessage("Data Received:\n;\nSuccess");
-            }
-            else
-            {
-                SetMessage("Data Received:\n" + indata);
+                case "11;":
+                    SetMessage(currentPort + "\nData Received:\n11;\nRF Enabled.");
+                    break;
+                case "9;":
+                    SetMessage(currentPort + "\nData Received:\n11;\nRF Disabled.");
+                    break;
+                case ";":
+                    SetMessage(currentPort + "\nData Received:\n;\nSuccess");
+                    break;
+                default:
+                    SetMessage(currentPort + "\nData Received:\n" + indata);
+                    break;
             }
         }
 
