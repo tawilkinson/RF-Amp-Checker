@@ -16,6 +16,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.IO.Ports;
+using System.Text.RegularExpressions;
 
 namespace RS232check
 {
@@ -30,7 +31,9 @@ namespace RS232check
 
         public MainWindow()
         {
+
             InitializeComponent();
+            Loaded += new RoutedEventHandler(Page_Loaded);
 
             Commands.Add("Enable Remote Control", "SPC:CTL 1;");
             Commands.Add("Enable RF power", "RF 1;");
@@ -45,10 +48,27 @@ namespace RS232check
             }
         }
 
+        void Page_Loaded(object sender, RoutedEventArgs e)
+        {
+            Message m = new Message();
+            {
+                m.textb = "Click Ports to load...";
+            }
+            txtbInfo.DataContext = m;
+        }
+
+        public class Message
+        {
+            public string textb { get; set; }
+        }
+
         private void SetMessage(string txtin)
         {
-            string txtout = txtin + "\n";
-            txtbInfo.Text = txtout;
+            Message m = new Message();
+            {
+                m.textb = txtin + "\n";
+            }
+            txtbInfo.DataContext = m;
         }
 
         private void btnGetSerialPorts_Click(object sender, EventArgs e)
@@ -111,8 +131,30 @@ namespace RS232check
         {
             SerialPort sp = (SerialPort)sender;
             string indata = sp.ReadExisting();
+
+            indata = Regex.Replace(indata, @"[^\u0020-\u007E]+", string.Empty);
+
+            if (indata == "11;")
+            {
+                MessageBox.Show("Data Received:\n11;\nRF Enabled.");
+                
+            }
+            else if (indata == "9;")
+            {
+                MessageBox.Show("Data Received:\n9;\nRF disabled.");
+            }
+            else if (indata == ";")
+            {
+                MessageBox.Show("Data Received:\n;\nSuccess");
+            }
+            else
+            {
+                MessageBox.Show("Data Received:\n" + indata);
+            }
+
             // SetMessage("Data Received:\n" + indata);
-            MessageBox.Show("Returned value: \n" + indata);
+            // MessageBox.Show("Returned value: \n" + indata);
+            // Console.WriteLine("Data Received:\n" + indata);
         }
 
         private void btnSend_Click(object sender, EventArgs e)

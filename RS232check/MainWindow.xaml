@@ -10,7 +10,7 @@
     <Grid>
         <Grid Margin="0,0,0,22">
             <Button x:Name="btnPorts" Content="Ports" HorizontalAlignment="Left" Height="25" Margin="32,23,0,0" VerticalAlignment="Top" Width="62" Click="btnGetSerialPorts_Click"/>
-            <TextBox x:Name="txtbInfo" Height="106" Margin="32,92,32,0" TextWrapping="Wrap" Text="Click Ports to load..." VerticalAlignment="Top"/>
+            <TextBox x:Name="txtbInfo" Height="106" Margin="32,92,32,0" TextWrapping="Wrap" Text="{Binding textb}" VerticalAlignment="Top"/>
             <ComboBox x:Name="cboPorts" HorizontalAlignment="Left" Height="25" Margin="115,23,0,0" VerticalAlignment="Top" Width="160"/>
             <Button x:Name="btnPortState" Content="Closed" Height="24" Margin="294,24,32,0" VerticalAlignment="Top" Click="btnPortStatus_Click"/>
             <Button x:Name="btnSend" Content="Send" HorizontalAlignment="Left" Height="25" Margin="294,62,0,0" VerticalAlignment="Top" Width="62" Click="btnSend_Click"/>
