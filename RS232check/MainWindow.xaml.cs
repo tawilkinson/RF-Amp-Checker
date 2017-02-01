@@ -28,12 +28,14 @@ namespace RS232check
         SerialPort ComPort = new SerialPort();
         bool PortFlag = new bool();
         Dictionary<string, string> Commands = new Dictionary<string, string>();
+        public Message messenger = new Message();
 
         public MainWindow()
         {
 
             InitializeComponent();
-            Loaded += new RoutedEventHandler(Page_Loaded);
+            DataContext = messenger;
+            SetMessage("Click Ports to load...");
 
             Commands.Add("Enable Remote Control", "SPC:CTL 1;");
             Commands.Add("Enable RF power", "RF 1;");
@@ -48,27 +50,31 @@ namespace RS232check
             }
         }
 
-        void Page_Loaded(object sender, RoutedEventArgs e)
+        public class Message : INotifyPropertyChanged
         {
-            Message m = new Message();
-            {
-                m.textb = "Click Ports to load...";
+            string textb = "";
+            public string Textb {
+                get {
+                    return textb;
+                }
+                set {
+                    textb = value;
+                    OnPropertyChanged("Textb");
+                }
             }
-            txtbInfo.DataContext = m;
-        }
 
-        public class Message
-        {
-            public string textb { get; set; }
+            public event PropertyChangedEventHandler PropertyChanged;
+
+            private void OnPropertyChanged(string property)
+            {
+                if (PropertyChanged != null)
+                    PropertyChanged(this, new PropertyChangedEventArgs(property));
+            }
         }
 
         private void SetMessage(string txtin)
         {
-            Message m = new Message();
-            {
-                m.textb = txtin + "\n";
-            }
-            txtbInfo.DataContext = m;
+            messenger.Textb = txtin + "\n";
         }
 
         private void btnGetSerialPorts_Click(object sender, EventArgs e)
@@ -94,6 +100,7 @@ namespace RS232check
                 }
                 cboPorts.Text = ArrayComPortsNames[0];
                 PortFlag = true;
+                SetMessage((index + 1) + " COM devices detected.");
             }
             catch
             {
@@ -136,25 +143,21 @@ namespace RS232check
 
             if (indata == "11;")
             {
-                MessageBox.Show("Data Received:\n11;\nRF Enabled.");
+                SetMessage("Data Received:\n11;\nRF Enabled.");
                 
             }
             else if (indata == "9;")
             {
-                MessageBox.Show("Data Received:\n9;\nRF disabled.");
+                SetMessage("Data Received:\n9;\nRF disabled.");
             }
             else if (indata == ";")
             {
-                MessageBox.Show("Data Received:\n;\nSuccess");
+                SetMessage("Data Received:\n;\nSuccess");
             }
             else
             {
-                MessageBox.Show("Data Received:\n" + indata);
+                SetMessage("Data Received:\n" + indata);
             }
-
-            // SetMessage("Data Received:\n" + indata);
-            // MessageBox.Show("Returned value: \n" + indata);
-            // Console.WriteLine("Data Received:\n" + indata);
         }
 
         private void btnSend_Click(object sender, EventArgs e)
