@@ -1,6 +1,6 @@
 # RF-Amp-Checker
 
-Simple GUI Interface to [Barthel RF Amps](www.barthel-hf.de/?lang=en) in C#
+Simple GUI Interface to [Barthel RF Amps](http://www.barthel-hf.de/?lang=en) in C#
 
 Currently supports:
 
