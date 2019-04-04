@@ -62,7 +62,12 @@ namespace RS232check
 
         private void SetMessage(string txtin)
         {
-            messenger.Textb = txtin + "\n";
+            messenger.Textb = txtin;
+        }
+
+        private void AppendMessage(string txtin)
+        {
+            messenger.Textb = messenger.Textb + "\n" + txtin;
         }
 
         private void btnGetSerialPorts_Click(object sender, EventArgs e)
@@ -150,6 +155,37 @@ namespace RS232check
             }
         }
 
+        private void CheckHandler(object sender, SerialDataReceivedEventArgs e)
+        {
+            SerialPort sp = (SerialPort)sender;
+            string indata = sp.ReadExisting();
+
+            AppendMessage(indata);
+
+            indata = Regex.Replace(indata, @"[^\u0020-\u007E]+", string.Empty);
+
+            AppendMessage(indata);
+
+            switch (indata)
+            {
+                case "11;":
+                    AppendMessage(currentPort + " Barthel amp - Active.");
+                    break;
+                case "10;":
+                    AppendMessage(currentPort + " Barthel amp - Start.");
+                    break;
+                case "9;":
+                    AppendMessage(currentPort + " Barthel amp - Inactive.");
+                    break;
+                case "1;":
+                    AppendMessage(currentPort + " Barthel amp - Error state.");
+                    break;
+                default:
+                    AppendMessage(currentPort + " unknown device.");
+                    break;
+            }
+        }
+
         private void btnSend_Click(object sender, EventArgs e)
         {
             if (cboCommand.SelectedValue == null)
@@ -173,5 +209,66 @@ namespace RS232check
             }
         }
 
+        private void BtnPortScan_Click(object sender, RoutedEventArgs e)
+        {
+            string[] ArrayComPortsNames = null;
+            // string[] ArrayRFPortsNames = null;
+            int index = -1;
+            string ComPortName = null;
+            cboPorts.Items.Clear();
+
+            try
+            {
+                ArrayComPortsNames = SerialPort.GetPortNames();
+                Array.Sort(ArrayComPortsNames);
+                do
+                {
+                    index += 1;
+                    cboPorts.Items.Add(ArrayComPortsNames[index]);
+                }
+                while (!((ArrayComPortsNames[index] == ComPortName) ||
+                (index == ArrayComPortsNames.GetUpperBound(0))));
+
+                if (index == ArrayComPortsNames.GetUpperBound(0))
+                {
+                    ComPortName = ArrayComPortsNames[0];
+                }
+                cboPorts.Text = ArrayComPortsNames[0];
+                PortFlag = true;
+                SetMessage((index + 1) + " COM devices detected.\nDetermining amps");
+            }
+            catch
+            {
+                PortFlag = false;
+            }
+
+            if (PortFlag == false)
+            {
+                SetMessage("No COM devices detected...");
+            }
+            else
+            {
+                index = 0;
+                do
+                {
+                    btnPortState.Content = "Open";
+                    ComPort.PortName = Convert.ToString(ArrayComPortsNames[index]);
+                    ComPort.BaudRate = Convert.ToInt32(19200);
+                    ComPort.DataBits = Convert.ToInt16(8);
+                    ComPort.Handshake = (Handshake)Enum.Parse(typeof(Handshake), "None");
+                    ComPort.DataReceived += new SerialDataReceivedEventHandler(CheckHandler);
+                    ComPort.Open();
+                    currentPort = ArrayComPortsNames[index];
+                    AppendMessage(ArrayComPortsNames[index] + " opened.");
+                    ComPort.Write("STA?;");
+                    AppendMessage(ArrayComPortsNames[index] + " written.");
+                    ComPort.Close();
+                    btnPortState.Content = "Closed";
+                    index++;
+                }
+                while (!(index == ArrayComPortsNames.GetUpperBound(0)));
+                
+            }
+        }
     }
 }
