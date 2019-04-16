@@ -13,11 +13,11 @@ namespace RS232check
     /// </summary>
     public partial class MainWindow : Window
     {
-        SerialPort ComPort = new SerialPort();
-        SerialPort ScanPort = new SerialPort();
+        readonly SerialPort ComPort = new SerialPort();
+        readonly SerialPort ScanPort = new SerialPort();
         bool PortFlag = new bool();
         bool KnownAmp = new bool();
-        Dictionary<string, string> Commands = new Dictionary<string, string>();
+        readonly Dictionary<string, string> Commands = new Dictionary<string, string>();
         public Message messenger = new Message();
         string currentPort;
 
@@ -58,8 +58,7 @@ namespace RS232check
 
             private void OnPropertyChanged(string property)
             {
-                if (PropertyChanged != null)
-                    PropertyChanged(this, new PropertyChangedEventArgs(property));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
             }
         }
 
@@ -73,9 +72,9 @@ namespace RS232check
             messenger.Textb = messenger.Textb + "\n" + txtin;
         }
 
-        private void btnGetSerialPorts_Click(object sender, EventArgs e)
+        private void BtnGetSerialPorts_Click(object sender, EventArgs e)
         {
-            string[] ArrayComPortsNames = null;
+            string[] ArrayComPortsNames;
             int index = -1;
             string ComPortName = null;
             cboPorts.Items.Clear();
@@ -107,7 +106,7 @@ namespace RS232check
             }
         }
 
-        public void btnPortStatus_Click(object sender, EventArgs e)
+        public void BtnPortStatus_Click(object sender, EventArgs e)
         {
             if (PortFlag == false)
             {
@@ -200,7 +199,7 @@ namespace RS232check
             
         }
 
-        private void btnSend_Click(object sender, EventArgs e)
+        private void BtnSend_Click(object sender, EventArgs e)
         {
             if (cboCommand.SelectedValue == null)
             {
@@ -216,8 +215,7 @@ namespace RS232check
             }
             else
             {
-                string val = "";
-                Commands.TryGetValue(cboCommand.SelectedValue.ToString(), out val);
+                Commands.TryGetValue(cboCommand.SelectedValue.ToString(), out string val);
                 SetMessage("Sending \"" + val + "\"");
                 ComPort.Write(val);
             }

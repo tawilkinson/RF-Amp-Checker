@@ -12,11 +12,11 @@
             <RowDefinition Height="33*"/>
         </Grid.RowDefinitions>
         <Grid Grid.RowSpan="2" Margin="0,0,0,0">
-            <Button x:Name="btnPorts" Content="Ports" HorizontalAlignment="Left" Height="25" Margin="130,23,0,0" VerticalAlignment="Top" Width="62" Click="btnGetSerialPorts_Click"/>
+            <Button x:Name="btnPorts" Content="Ports" HorizontalAlignment="Left" Height="25" Margin="130,23,0,0" VerticalAlignment="Top" Width="62" Click="BtnGetSerialPorts_Click"/>
             <TextBox x:Name="txtbInfo" Margin="26,92,26,10" TextWrapping="Wrap" Text="{Binding Textb}"/>
             <ComboBox x:Name="cboPorts" HorizontalAlignment="Left" Height="25" Margin="197,23,0,0" VerticalAlignment="Top" Width="160"/>
-            <Button x:Name="btnPortState" Content="Closed" Height="24" Margin="362,23,26,0" VerticalAlignment="Top" Click="btnPortStatus_Click"/>
-            <Button x:Name="btnSend" Content="Send" Height="25" Margin="362,62,26,0" VerticalAlignment="Top" Click="btnSend_Click"/>
+            <Button x:Name="btnPortState" Content="Closed" Height="24" Margin="362,23,26,0" VerticalAlignment="Top" Click="BtnPortStatus_Click"/>
+            <Button x:Name="btnSend" Content="Send" Height="25" Margin="362,62,26,0" VerticalAlignment="Top" Click="BtnSend_Click"/>
             <ComboBox x:Name="cboCommand" HorizontalAlignment="Left" Height="25" Margin="197,62,0,0" VerticalAlignment="Top" Width="160"/>
             <Button x:Name="btnPortScan" Content="Port Scan" HorizontalAlignment="Left" Height="25" Margin="26,23,0,0" VerticalAlignment="Top" Width="95" Click="BtnPortScan_Click"/>
         </Grid>
