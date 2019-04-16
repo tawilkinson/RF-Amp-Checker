@@ -4,6 +4,7 @@ using System.Windows;
 using System.ComponentModel;
 using System.IO.Ports;
 using System.Text.RegularExpressions;
+using System.Diagnostics;
 
 namespace RS232check
 {
@@ -13,7 +14,9 @@ namespace RS232check
     public partial class MainWindow : Window
     {
         SerialPort ComPort = new SerialPort();
+        SerialPort ScanPort = new SerialPort();
         bool PortFlag = new bool();
+        bool KnownAmp = new bool();
         Dictionary<string, string> Commands = new Dictionary<string, string>();
         public Message messenger = new Message();
         string currentPort;
@@ -120,19 +123,24 @@ namespace RS232check
                 ComPort.DataReceived += new SerialDataReceivedEventHandler(DataRecievedHandler);
                 ComPort.Open();
                 currentPort = cboPorts.Text;
-                SetMessage(cboPorts.Text + " opened.");
+                // ensure it is open before we send anything
+                System.Threading.Thread.Sleep(50);
+                SetMessage(currentPort + " opened.");
             }
             else if (btnPortState.Content.ToString() == "Open")
             {
                 btnPortState.Content = "Closed";
                 ComPort.Close();
+                // It takes time to close a port
+                System.Threading.Thread.Sleep(100);
+                SetMessage(currentPort + " closed.");
                 currentPort = "No Port";
-                SetMessage(cboPorts.Text + " closed.");
             }
         }
 
         private void DataRecievedHandler(object sender, SerialDataReceivedEventArgs e)
         {
+            Debug.WriteLine("In data received!");
             SerialPort sp = (SerialPort)sender;
             string indata = sp.ReadExisting();
 
@@ -141,49 +149,55 @@ namespace RS232check
             switch (indata)
             {
                 case "11;":
-                    SetMessage(currentPort + "\nData Received:\n11;\nRF Enabled.");
+                    SetMessage(currentPort + "\nData Received: 11;\nRF Enabled.");
                     break;
                 case "9;":
-                    SetMessage(currentPort + "\nData Received:\n11;\nRF Disabled.");
+                    SetMessage(currentPort + "\nData Received: 9;\nRF Disabled.");
                     break;
                 case ";":
-                    SetMessage(currentPort + "\nData Received:\n;\nSuccess");
+                    SetMessage(currentPort + "\nData Received: ;\nSuccess");
                     break;
                 default:
-                    SetMessage(currentPort + "\nData Received:\n" + indata);
+                    SetMessage(currentPort + "\nData Received: " + indata);
                     break;
             }
         }
 
         private void CheckHandler(object sender, SerialDataReceivedEventArgs e)
         {
+            Debug.WriteLine("In check!");
             SerialPort sp = (SerialPort)sender;
             string indata = sp.ReadExisting();
 
-            AppendMessage(indata);
+            Debug.WriteLine(indata);
 
             indata = Regex.Replace(indata, @"[^\u0020-\u007E]+", string.Empty);
 
-            AppendMessage(indata);
+            Debug.WriteLine(indata);
 
-            switch (indata)
+            if (!KnownAmp)
             {
-                case "11;":
-                    AppendMessage(currentPort + " Barthel amp - Active.");
-                    break;
-                case "10;":
-                    AppendMessage(currentPort + " Barthel amp - Start.");
-                    break;
-                case "9;":
-                    AppendMessage(currentPort + " Barthel amp - Inactive.");
-                    break;
-                case "1;":
-                    AppendMessage(currentPort + " Barthel amp - Error state.");
-                    break;
-                default:
-                    AppendMessage(currentPort + " unknown device.");
-                    break;
+                KnownAmp = true;
+                switch (indata)
+                {
+                    case "11;":
+                        AppendMessage(currentPort + " Barthel amp - Active.");
+                        break;
+                    case "10;":
+                        AppendMessage(currentPort + " Barthel amp - Start.");
+                        break;
+                    case "9;":
+                        AppendMessage(currentPort + " Barthel amp - Inactive.");
+                        break;
+                    case "1;":
+                        AppendMessage(currentPort + " Barthel amp - Error state.");
+                        break;
+                    default:
+                        KnownAmp = false;
+                        break;
+                }
             }
+            
         }
 
         private void btnSend_Click(object sender, EventArgs e)
@@ -211,29 +225,28 @@ namespace RS232check
 
         private void BtnPortScan_Click(object sender, RoutedEventArgs e)
         {
-            string[] ArrayComPortsNames = null;
-            // string[] ArrayRFPortsNames = null;
+            string[] ArrayRFPortsNames = null;
             int index = -1;
             string ComPortName = null;
             cboPorts.Items.Clear();
 
             try
             {
-                ArrayComPortsNames = SerialPort.GetPortNames();
-                Array.Sort(ArrayComPortsNames);
+                ArrayRFPortsNames = SerialPort.GetPortNames();
+                Array.Sort(ArrayRFPortsNames);
                 do
                 {
                     index += 1;
-                    cboPorts.Items.Add(ArrayComPortsNames[index]);
+                    cboPorts.Items.Add(ArrayRFPortsNames[index]);
                 }
-                while (!((ArrayComPortsNames[index] == ComPortName) ||
-                (index == ArrayComPortsNames.GetUpperBound(0))));
+                while (!((ArrayRFPortsNames[index] == ComPortName) ||
+                (index == ArrayRFPortsNames.GetUpperBound(0))));
 
-                if (index == ArrayComPortsNames.GetUpperBound(0))
+                if (index == ArrayRFPortsNames.GetUpperBound(0))
                 {
-                    ComPortName = ArrayComPortsNames[0];
+                    ComPortName = ArrayRFPortsNames[0];
                 }
-                cboPorts.Text = ArrayComPortsNames[0];
+                cboPorts.Text = ArrayRFPortsNames[0];
                 PortFlag = true;
                 SetMessage((index + 1) + " COM devices detected.\nDetermining amps");
             }
@@ -251,22 +264,33 @@ namespace RS232check
                 index = 0;
                 do
                 {
+                    KnownAmp = false;
+                    AppendMessage("Scanning " + ArrayRFPortsNames[index]);
+                    ScanPort.PortName = Convert.ToString(ArrayRFPortsNames[index]);
+                    ScanPort.BaudRate = Convert.ToInt32(19200);
+                    ScanPort.DataBits = Convert.ToInt16(8);
+                    ScanPort.Handshake = (Handshake)Enum.Parse(typeof(Handshake), "None");
+                    ScanPort.DataReceived += new SerialDataReceivedEventHandler(CheckHandler);
+
+                    ScanPort.Open();
                     btnPortState.Content = "Open";
-                    ComPort.PortName = Convert.ToString(ArrayComPortsNames[index]);
-                    ComPort.BaudRate = Convert.ToInt32(19200);
-                    ComPort.DataBits = Convert.ToInt16(8);
-                    ComPort.Handshake = (Handshake)Enum.Parse(typeof(Handshake), "None");
-                    ComPort.DataReceived += new SerialDataReceivedEventHandler(CheckHandler);
-                    ComPort.Open();
-                    currentPort = ArrayComPortsNames[index];
-                    AppendMessage(ArrayComPortsNames[index] + " opened.");
-                    ComPort.Write("STA?;");
-                    AppendMessage(ArrayComPortsNames[index] + " written.");
-                    ComPort.Close();
+                    currentPort = ArrayRFPortsNames[index];
+                    Debug.WriteLine(ArrayRFPortsNames[index] + " opened.");
+
+                    ScanPort.Write("STA?;");
+                    Debug.WriteLine(ArrayRFPortsNames[index] + " written.");
+                    System.Threading.Thread.Sleep(100);
+                    ScanPort.Close();
                     btnPortState.Content = "Closed";
+                    Debug.WriteLine(ArrayRFPortsNames[index] + " written.");
+                    System.Threading.Thread.Sleep(100);
+                    if (!KnownAmp)
+                    {
+                        AppendMessage(currentPort + " unknown device.");
+                    }
                     index++;
                 }
-                while (!(index == ArrayComPortsNames.GetUpperBound(0)));
+                while (!(index == ArrayRFPortsNames.GetUpperBound(0)));
                 
             }
         }
