@@ -132,6 +132,7 @@ namespace RS232check
                 ComPort.Close();
                 // It takes time to close a port
                 System.Threading.Thread.Sleep(100);
+                ComPort.DataReceived -= new SerialDataReceivedEventHandler(DataRecievedHandler);
                 SetMessage(currentPort + " closed.");
                 currentPort = "No Port";
             }
@@ -260,6 +261,7 @@ namespace RS232check
             else
             {
                 index = 0;
+                ScanPort.DataReceived += new SerialDataReceivedEventHandler(CheckHandler);
                 do
                 {
                     KnownAmp = false;
@@ -268,7 +270,6 @@ namespace RS232check
                     ScanPort.BaudRate = Convert.ToInt32(19200);
                     ScanPort.DataBits = Convert.ToInt16(8);
                     ScanPort.Handshake = (Handshake)Enum.Parse(typeof(Handshake), "None");
-                    ScanPort.DataReceived += new SerialDataReceivedEventHandler(CheckHandler);
 
                     ScanPort.Open();
                     btnPortState.Content = "Open";
@@ -289,7 +290,7 @@ namespace RS232check
                     index++;
                 }
                 while (!(index == ArrayRFPortsNames.GetUpperBound(0)));
-                
+                ScanPort.DataReceived -= new SerialDataReceivedEventHandler(CheckHandler);
             }
         }
     }
